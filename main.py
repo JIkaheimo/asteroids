@@ -1,5 +1,8 @@
+import pygame
+
+
 def main():
-    print("Hello from asteroids!")
+    print("Starting Asteroids!")
 
 
 if __name__ == "__main__":
