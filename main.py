@@ -41,8 +41,11 @@ def main():
                     shot.kill()
                     asteroid.split()
             if player.collides(asteroid):
-                print("Game over!")
-                return
+                asteroid.split()
+                player.hit()
+                if player.lives <= 0:
+                    print("Game over!")
+                    return
 
         screen.fill(pygame.Color("black"))
 

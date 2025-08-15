@@ -5,6 +5,8 @@ from constants import (
     PLAYER_SHOT_SPEED,
     PLAYER_SPEED,
     PLAYER_TURN_SPEED,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
 )
 import pygame
 
@@ -16,6 +18,16 @@ class Player(CircleShape):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation: float = 0
         self.timer: float = 0
+        self.lives = 3
+
+    def hit(self):
+        self.lives -= 1
+        if self.lives > 0:
+            self.position.x = SCREEN_WIDTH / 2
+            self.position.y = SCREEN_HEIGHT / 2
+            self.rotation = 0
+        else:
+            self.kill()
 
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
