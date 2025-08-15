@@ -37,13 +37,35 @@ def main():
                 return
 
         updatable.update(dt)
-        for asteroid in asteroids:
+
+        asteroid_list = asteroids.sprites()
+        for i, asteroid1 in enumerate(asteroid_list):
+            # Asteroid on asteroid collision
+            for asteroid2 in asteroid_list[i + 1 :]:
+                if asteroid1.collides(asteroid2):
+                    distance = asteroid1.position.distance_to(
+                        asteroid2.position
+                    )
+                    overlap = (asteroid1.radius + asteroid2.radius) - distance
+                    if overlap > 0:
+                        direction = (
+                            asteroid1.position - asteroid2.position
+                        ).normalize()
+                        asteroid1.position += direction * overlap / 2
+                        asteroid2.position -= direction * overlap / 2
+
+                    asteroid1.velocity, asteroid2.velocity = (
+                        asteroid2.velocity,
+                        asteroid1.velocity,
+                    )
+            # Shot on asteroid collision
             for shot in shots:
-                if shot.collides(asteroid):
+                if shot.collides(asteroid1):
                     shot.kill()
-                    asteroid.split()
-            if player.collides(asteroid):
-                asteroid.split()
+                    asteroid1.split()
+            # Player on asteroid collision
+            if player.collides(asteroid1):
+                asteroid1.split()
                 player.hit()
                 if player.lives <= 0:
                     print("Game over!")
@@ -54,7 +76,9 @@ def main():
         for entity in drawable:
             entity.draw(screen)
 
-        lives_text = font.render(f"Lives: {player.lives}", True, pygame.Color("white"))
+        lives_text = font.render(
+            f"Lives: {player.lives}", True, pygame.Color("white")
+        )
         screen.blit(lives_text, (10, 10))
 
         pygame.display.flip()
