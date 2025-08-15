@@ -10,6 +10,7 @@ from constants import (
     POWERUP_DURATION,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
+    SHIELD_DURATION,
 )
 import pygame
 
@@ -25,8 +26,12 @@ class Player(CircleShape):
         self.velocity = pygame.Vector2(0, 0)
         self.weapon = "default"
         self.powerup_timer = 0.0
+        self.shielded = False
+        self.shield_timer = 0.0
 
     def hit(self):
+        if self.shielded:
+            return
         self.lives -= 1
         if self.lives > 0:
             self.position.x = SCREEN_WIDTH / 2
@@ -48,6 +53,14 @@ class Player(CircleShape):
 
     def draw(self, screen: pygame.Surface) -> None:
         pygame.draw.polygon(screen, pygame.Color("yellow"), self.triangle(), 2)
+        if self.shielded:
+            pygame.draw.circle(
+                screen,
+                pygame.Color("white"),
+                self.position,
+                self.radius + 5,
+                2,
+            )
 
     def rotate(self, dt: float) -> None:
         self.rotation += dt * PLAYER_TURN_SPEED
@@ -104,14 +117,22 @@ class Player(CircleShape):
         return shots
 
     def set_weapon(self, weapon_type):
-        self.weapon = weapon_type
-        self.powerup_timer = POWERUP_DURATION
+        if weapon_type == "shield":
+            self.shielded = True
+            self.shield_timer = SHIELD_DURATION
+        else:
+            self.weapon = weapon_type
+            self.powerup_timer = POWERUP_DURATION
 
     def update(self, dt: float) -> None:
         self.timer -= dt
         self.powerup_timer -= dt
         if self.powerup_timer <= 0:
             self.weapon = "default"
+
+        self.shield_timer -= dt
+        if self.shield_timer <= 0:
+            self.shielded = False
 
         # Limit velocity
         if self.velocity.length() > PLAYER_MAX_SPEED:

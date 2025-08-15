@@ -7,12 +7,14 @@ from constants import POWERUP_LIFETIME
 class PowerUp(CircleShape):
     def __init__(self, x, y):
         super().__init__(x, y, 10)
-        self.type = random.choice(["shotgun", "triple"])
+        self.type = random.choice(["shotgun", "triple", "shield"])
         self.lifetime = POWERUP_LIFETIME
         if self.type == "shotgun":
             self.color = pygame.Color("orange")
-        else:
+        elif self.type == "triple":
             self.color = pygame.Color("cyan")
+        else:
+            self.color = pygame.Color("white")
 
     def update(self, dt):
         self.lifetime -= dt

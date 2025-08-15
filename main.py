@@ -134,6 +134,8 @@ class Game:
 
         if self.player.powerup_timer > 0:
             self._draw_powerup_bar()
+        if self.player.shield_timer > 0:
+            self._draw_shield_bar()
 
         pygame.display.flip()
 
@@ -147,6 +149,17 @@ class Game:
         fill_rect = pygame.Rect(x, y, fill, bar_height)
         pygame.draw.rect(self.screen, pygame.Color("white"), border_rect, 2)
         pygame.draw.rect(self.screen, pygame.Color("cyan"), fill_rect)
+
+    def _draw_shield_bar(self):
+        bar_width = 200
+        bar_height = 20
+        x = SCREEN_WIDTH / 2 - bar_width / 2
+        y = SCREEN_HEIGHT - bar_height - 40
+        fill = (self.player.shield_timer / SHIELD_DURATION) * bar_width
+        border_rect = pygame.Rect(x, y, bar_width, bar_height)
+        fill_rect = pygame.Rect(x, y, fill, bar_height)
+        pygame.draw.rect(self.screen, pygame.Color("white"), border_rect, 2)
+        pygame.draw.rect(self.screen, pygame.Color("white"), fill_rect)
 
 
 def main():

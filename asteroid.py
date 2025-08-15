@@ -17,7 +17,9 @@ class Asteroid(CircleShape):
         num_vertices = 12
         for i in range(num_vertices):
             angle = (i / num_vertices) * 2 * math.pi
-            dist = self.radius + random.uniform(-self.radius / 3, self.radius / 3)
+            dist = self.radius + random.uniform(
+                -self.radius / 3, self.radius / 3
+            )
             x = dist * math.cos(angle)
             y = dist * math.sin(angle)
             points.append(pygame.Vector2(x, y))
