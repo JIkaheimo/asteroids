@@ -14,6 +14,8 @@ def main():
 
     clock = pygame.time.Clock()
 
+    font = pygame.font.Font(None, 36)
+
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
@@ -51,6 +53,9 @@ def main():
 
         for entity in drawable:
             entity.draw(screen)
+
+        lives_text = font.render(f"Lives: {player.lives}", True, pygame.Color("white"))
+        screen.blit(lives_text, (10, 10))
 
         pygame.display.flip()
 
