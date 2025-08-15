@@ -15,6 +15,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
         self.running = True
+        self.score = 0
 
         self.updatable = pygame.sprite.Group()
         self.drawable = pygame.sprite.Group()
@@ -84,6 +85,7 @@ class Game:
             if shot.collides(asteroid):
                 shot.kill()
                 asteroid.split()
+                self.score += 10
 
     def _handle_player_on_asteroid_collision(self, asteroid):
         if self.player.collides(asteroid):
@@ -105,6 +107,11 @@ class Game:
             f"Lives: {self.player.lives}", True, pygame.Color("white")
         )
         self.screen.blit(lives_text, (10, 10))
+
+        score_text = self.font.render(
+            f"Score: {self.score}", True, pygame.Color("white")
+        )
+        self.screen.blit(score_text, (10, 40))
 
         pygame.display.flip()
 
