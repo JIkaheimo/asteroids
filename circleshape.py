@@ -14,6 +14,12 @@ class CircleShape(pygame.sprite.Sprite):
         self.velocity: pygame.Vector2 = pygame.Vector2(0, 0)
         self.radius: float = radius
 
+    def collides(self, other: "CircleShape") -> bool:
+        return (
+            self.position.distance_to(other.position)
+            < self.radius + other.radius
+        )
+
     def draw(self, screen: pygame.Surface) -> None:
         raise NotImplementedError("Subclasses must implement draw method")
 
