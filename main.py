@@ -8,82 +8,110 @@ from player import Player
 from shot import Shot
 
 
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+class Game:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font(None, 36)
+        self.running = True
 
-    clock = pygame.time.Clock()
+        self.updatable = pygame.sprite.Group()
+        self.drawable = pygame.sprite.Group()
+        self.asteroids = pygame.sprite.Group()
+        self.shots = pygame.sprite.Group()
 
-    font = pygame.font.Font(None, 36)
+        Player.containers = (self.updatable, self.drawable)
+        Asteroid.containers = (self.updatable, self.drawable, self.asteroids)
+        AsteroidField.containers = (self.updatable,)
+        Shot.containers = (self.updatable, self.drawable, self.shots)
 
-    updatable = pygame.sprite.Group()
-    drawable = pygame.sprite.Group()
-    asteroids = pygame.sprite.Group()
-    shots = pygame.sprite.Group()
+        self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        AsteroidField()
 
-    Player.containers = (updatable, drawable)
-    Asteroid.containers = (updatable, drawable, asteroids)
-    AsteroidField.containers = (updatable,)
-    Shot.containers = (updatable, drawable, shots)
+    def run(self):
+        dt = 0.0
+        while self.running:
+            self._handle_input()
+            self._process_game_logic(dt)
+            self._draw()
+            dt = self.clock.tick(60) / 1000.0
 
-    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-    AsteroidField()
-
-    dt = 0.0
-
-    while True:
+    def _handle_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return
+                self.running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                shot = self.player.shoot()
+                if shot:
+                    self.shots.add(shot)
 
-        updatable.update(dt)
+    def _process_game_logic(self, dt):
+        self.updatable.update(dt)
+        self._handle_collisions()
 
-        asteroid_list = asteroids.sprites()
+    def _handle_collisions(self):
+        asteroid_list = self.asteroids.sprites()
         for i, asteroid1 in enumerate(asteroid_list):
-            # Asteroid on asteroid collision
-            for asteroid2 in asteroid_list[i + 1 :]:
-                if asteroid1.collides(asteroid2):
-                    distance = asteroid1.position.distance_to(
-                        asteroid2.position
-                    )
-                    overlap = (asteroid1.radius + asteroid2.radius) - distance
-                    if overlap > 0:
-                        direction = (
-                            asteroid1.position - asteroid2.position
-                        ).normalize()
-                        asteroid1.position += direction * overlap / 2
-                        asteroid2.position -= direction * overlap / 2
+            self._handle_asteroid_on_asteroid_collision(
+                asteroid1, asteroid_list[i + 1 :]
+            )
+            self._handle_shot_on_asteroid_collision(asteroid1)
+            if self._handle_player_on_asteroid_collision(asteroid1):
+                break
 
-                    asteroid1.velocity, asteroid2.velocity = (
-                        asteroid2.velocity,
-                        asteroid1.velocity,
-                    )
-            # Shot on asteroid collision
-            for shot in shots:
-                if shot.collides(asteroid1):
-                    shot.kill()
-                    asteroid1.split()
-            # Player on asteroid collision
-            if player.collides(asteroid1):
-                asteroid1.split()
-                player.hit()
-                if player.lives <= 0:
-                    print("Game over!")
-                    return
+    def _handle_asteroid_on_asteroid_collision(
+        self, asteroid1, other_asteroids
+    ):
+        for asteroid2 in other_asteroids:
+            if asteroid1.collides(asteroid2):
+                distance = asteroid1.position.distance_to(asteroid2.position)
+                overlap = (asteroid1.radius + asteroid2.radius) - distance
+                if overlap > 0:
+                    direction = (
+                        asteroid1.position - asteroid2.position
+                    ).normalize()
+                    asteroid1.position += direction * overlap / 2
+                    asteroid2.position -= direction * overlap / 2
 
-        screen.fill(pygame.Color("black"))
+                asteroid1.velocity, asteroid2.velocity = (
+                    asteroid2.velocity,
+                    asteroid1.velocity,
+                )
 
-        for entity in drawable:
-            entity.draw(screen)
+    def _handle_shot_on_asteroid_collision(self, asteroid):
+        for shot in self.shots:
+            if shot.collides(asteroid):
+                shot.kill()
+                asteroid.split()
 
-        lives_text = font.render(
-            f"Lives: {player.lives}", True, pygame.Color("white")
+    def _handle_player_on_asteroid_collision(self, asteroid):
+        if self.player.collides(asteroid):
+            asteroid.split()
+            self.player.hit()
+            if self.player.lives <= 0:
+                print("Game over!")
+                self.running = False
+                return True
+        return False
+
+    def _draw(self):
+        self.screen.fill(pygame.Color("black"))
+
+        for entity in self.drawable:
+            entity.draw(self.screen)
+
+        lives_text = self.font.render(
+            f"Lives: {self.player.lives}", True, pygame.Color("white")
         )
-        screen.blit(lives_text, (10, 10))
+        self.screen.blit(lives_text, (10, 10))
 
         pygame.display.flip()
 
-        dt = clock.tick(60) / 1000.0
+
+def main():
+    game = Game()
+    game.run()
 
 
 if __name__ == "__main__":
