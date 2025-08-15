@@ -7,6 +7,7 @@ from constants import (
     PLAYER_SHOT_COOLDOWN,
     PLAYER_SHOT_SPEED,
     PLAYER_TURN_SPEED,
+    POWERUP_DURATION,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
 )
@@ -22,6 +23,8 @@ class Player(CircleShape):
         self.timer: float = 0
         self.lives = 3
         self.velocity = pygame.Vector2(0, 0)
+        self.weapon = "default"
+        self.powerup_timer = 0.0
 
     def hit(self):
         self.lives -= 1
@@ -53,22 +56,62 @@ class Player(CircleShape):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         self.velocity += forward * PLAYER_ACCELERATION * dt
 
-    def shoot(self) -> Shot | None:
+    def shoot(self) -> list[Shot]:
         if self.timer > 0:
-            return None
+            return []
 
         self.timer = PLAYER_SHOT_COOLDOWN
+        shots = []
+        if self.weapon == "default":
+            shots.append(self._shoot_default())
+        elif self.weapon == "shotgun":
+            shots.extend(self._shoot_shotgun())
+        elif self.weapon == "triple":
+            shots.extend(self._shoot_triple())
 
-        shot = Shot(
+        return shots
+
+    def _shoot_default(self):
+        return Shot(
             self.position.x,
             self.position.y,
             pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOT_SPEED
             + self.velocity,
         )
-        return shot
+
+    def _shoot_shotgun(self):
+        shots = []
+        for i in range(-2, 3):
+            direction = pygame.Vector2(0, 1).rotate(self.rotation + i * 10)
+            shot = Shot(
+                self.position.x,
+                self.position.y,
+                direction * PLAYER_SHOT_SPEED + self.velocity,
+            )
+            shots.append(shot)
+        return shots
+
+    def _shoot_triple(self):
+        shots = []
+        for i in range(-1, 2):
+            direction = pygame.Vector2(0, 1).rotate(self.rotation + i * 20)
+            shot = Shot(
+                self.position.x,
+                self.position.y,
+                direction * PLAYER_SHOT_SPEED + self.velocity,
+            )
+            shots.append(shot)
+        return shots
+
+    def set_weapon(self, weapon_type):
+        self.weapon = weapon_type
+        self.powerup_timer = POWERUP_DURATION
 
     def update(self, dt: float) -> None:
         self.timer -= dt
+        self.powerup_timer -= dt
+        if self.powerup_timer <= 0:
+            self.weapon = "default"
 
         # Limit velocity
         if self.velocity.length() > PLAYER_MAX_SPEED:

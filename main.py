@@ -1,4 +1,5 @@
 import pygame
+import random
 
 from constants import *
 
@@ -8,6 +9,7 @@ from player import Player
 from shot import Shot
 from explosion import Explosion
 from background import Background
+from powerup import PowerUp
 
 
 class Game:
@@ -24,12 +26,14 @@ class Game:
         self.asteroids = pygame.sprite.Group()
         self.shots = pygame.sprite.Group()
         self.explosions = pygame.sprite.Group()
+        self.powerups = pygame.sprite.Group()
 
         Player.containers = (self.updatable, self.drawable)
         Asteroid.containers = (self.updatable, self.drawable, self.asteroids)
         AsteroidField.containers = (self.updatable,)
         Shot.containers = (self.updatable, self.drawable, self.shots)
         Explosion.containers = (self.updatable, self.drawable, self.explosions)
+        PowerUp.containers = (self.updatable, self.drawable, self.powerups)
 
         self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         AsteroidField()
@@ -65,6 +69,7 @@ class Game:
             self._handle_shot_on_asteroid_collision(asteroid1)
             if self._handle_player_on_asteroid_collision(asteroid1):
                 break
+        self._handle_player_on_powerup_collision()
 
     def _handle_asteroid_on_asteroid_collision(
         self, asteroid1, other_asteroids
@@ -92,6 +97,8 @@ class Game:
                 asteroid.split()
                 self.score += 10
                 Explosion(asteroid.position.x, asteroid.position.y)
+                if random.random() < POWERUP_CHANCE:
+                    PowerUp(asteroid.position.x, asteroid.position.y)
 
     def _handle_player_on_asteroid_collision(self, asteroid):
         if self.player.collides(asteroid):
@@ -102,6 +109,12 @@ class Game:
                 self.running = False
                 return True
         return False
+
+    def _handle_player_on_powerup_collision(self):
+        for powerup in self.powerups:
+            if self.player.collides(powerup):
+                self.player.set_weapon(powerup.type)
+                powerup.kill()
 
     def _draw(self):
         self.background.draw(self.screen, self.player.position)
