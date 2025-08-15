@@ -7,6 +7,7 @@ from asteroidfield import AsteroidField
 from player import Player
 from shot import Shot
 from explosion import Explosion
+from background import Background
 
 
 class Game:
@@ -32,6 +33,7 @@ class Game:
 
         self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         AsteroidField()
+        self.background = Background(SCREEN_WIDTH, SCREEN_HEIGHT, 200)
 
     def run(self):
         dt = 0.0
@@ -102,7 +104,7 @@ class Game:
         return False
 
     def _draw(self):
-        self.screen.fill(pygame.Color("black"))
+        self.background.draw(self.screen, self.player.position)
 
         for entity in self.drawable:
             entity.draw(self.screen)
