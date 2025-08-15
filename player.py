@@ -1,9 +1,11 @@
 from circleshape import CircleShape
 from constants import (
+    PLAYER_ACCELERATION,
+    PLAYER_FRICTION,
+    PLAYER_MAX_SPEED,
     PLAYER_RADIUS,
     PLAYER_SHOT_COOLDOWN,
     PLAYER_SHOT_SPEED,
-    PLAYER_SPEED,
     PLAYER_TURN_SPEED,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -19,6 +21,7 @@ class Player(CircleShape):
         self.rotation: float = 0
         self.timer: float = 0
         self.lives = 3
+        self.velocity = pygame.Vector2(0, 0)
 
     def hit(self):
         self.lives -= 1
@@ -26,6 +29,7 @@ class Player(CircleShape):
             self.position.x = SCREEN_WIDTH / 2
             self.position.y = SCREEN_HEIGHT / 2
             self.rotation = 0
+            self.velocity = pygame.Vector2(0, 0)
         else:
             self.kill()
 
@@ -45,9 +49,9 @@ class Player(CircleShape):
     def rotate(self, dt: float) -> None:
         self.rotation += dt * PLAYER_TURN_SPEED
 
-    def move(self, dt: float) -> None:
+    def accelerate(self, dt: float) -> None:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
-        self.position += forward * PLAYER_SPEED * dt
+        self.velocity += forward * PLAYER_ACCELERATION * dt
 
     def shoot(self) -> Shot | None:
         if self.timer > 0:
@@ -58,22 +62,30 @@ class Player(CircleShape):
         shot = Shot(
             self.position.x,
             self.position.y,
-            pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOT_SPEED,
+            pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOT_SPEED
+            + self.velocity,
         )
         return shot
 
     def update(self, dt: float) -> None:
         self.timer -= dt
+
+        # Limit velocity
+        if self.velocity.length() > PLAYER_MAX_SPEED:
+            self.velocity.scale_to_length(PLAYER_MAX_SPEED)
+
+        # Apply friction
+        self.velocity *= PLAYER_FRICTION
+
+        self.position += self.velocity * dt
+
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_w]:
-            self.move(dt)
+            self.accelerate(dt)
         if keys[pygame.K_a]:
             self.rotate(-dt)
         if keys[pygame.K_s]:
-            self.move(-dt)
+            self.accelerate(-dt)
         if keys[pygame.K_d]:
             self.rotate(dt)
-        # Remove shooting from here, it's handled in main.py
-        # if keys[pygame.K_SPACE]:
-        #     self.shoot()
