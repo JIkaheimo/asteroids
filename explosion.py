@@ -3,7 +3,7 @@ import pygame
 
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y):
-        super().__init__()
+        super().__init__(self.containers)
         self.position = pygame.Vector2(x, y)
         self.radius = 10
         self.max_radius = 40
