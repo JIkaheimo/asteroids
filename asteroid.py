@@ -29,7 +29,7 @@ class Asteroid(CircleShape):
 
     def draw(self, screen: pygame.Surface) -> None:
         pygame.draw.circle(
-            screen, pygame.Color("gray"), self.position, self.radius, 2
+            screen, pygame.Color("brown"), self.position, self.radius, 2
         )
 
     def update(self, dt: float) -> None:
