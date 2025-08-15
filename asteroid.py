@@ -2,11 +2,26 @@ import pygame
 from circleshape import CircleShape
 from constants import ASTEROID_MIN_RADIUS
 import random
+import math
 
 
 class Asteroid(CircleShape):
     def __init__(self, x: float, y: float, radius: float):
         super().__init__(x, y, radius)
+        self.shape = self._generate_shape()
+        self.rotation = 0
+        self.rotation_speed = random.uniform(-50, 50)
+
+    def _generate_shape(self):
+        points = []
+        num_vertices = 12
+        for i in range(num_vertices):
+            angle = (i / num_vertices) * 2 * math.pi
+            dist = self.radius + random.uniform(-self.radius / 3, self.radius / 3)
+            x = dist * math.cos(angle)
+            y = dist * math.sin(angle)
+            points.append(pygame.Vector2(x, y))
+        return points
 
     def split(self) -> None:
         self.kill()
@@ -28,9 +43,11 @@ class Asteroid(CircleShape):
         asteroid.velocity = b * 1.2
 
     def draw(self, screen: pygame.Surface) -> None:
-        pygame.draw.circle(
-            screen, pygame.Color("brown"), self.position, self.radius, 2
-        )
+        rotated_shape = [
+            point.rotate(self.rotation) + self.position for point in self.shape
+        ]
+        pygame.draw.polygon(screen, pygame.Color("brown"), rotated_shape, 2)
 
     def update(self, dt: float) -> None:
         self.position += self.velocity * dt
+        self.rotation += self.rotation_speed * dt
