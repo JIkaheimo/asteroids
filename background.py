@@ -2,6 +2,7 @@ import pygame
 import random
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 
+
 class Background:
     def __init__(self, width, height, star_count):
         self.width = width
@@ -17,13 +18,16 @@ class Background:
         screen.fill((0, 0, 0))  # Black background
         for star in self.stars:
             # Parallax effect
-            star_screen_pos = (star["pos"] - player_pos * 0.1) % pygame.Vector2(
-                self.width, self.height
+            pos = star["pos"] - player_pos * 0.1
+            star_screen_pos_x = (
+                pos.x - self.width / 2
+            ) % self.width - self.width / 2
+            star_screen_pos_y = (
+                pos.y - self.height / 2
+            ) % self.height - self.height / 2
+            star_screen_pos = pygame.Vector2(
+                star_screen_pos_x, star_screen_pos_y
             )
-
-            # Center the star positions
-            star_screen_pos.x -= self.width / 2
-            star_screen_pos.y -= self.height / 2
 
             # Wrap around screen edges
             if star_screen_pos.x < -SCREEN_WIDTH / 2:
