@@ -10,6 +10,7 @@ from shot import Shot
 from explosion import Explosion
 from background import Background
 from powerup import PowerUp
+from xporb import XPOrb
 
 
 class Game:
@@ -27,6 +28,7 @@ class Game:
         self.shots = pygame.sprite.Group()
         self.explosions = pygame.sprite.Group()
         self.powerups = pygame.sprite.Group()
+        self.xporbs = pygame.sprite.Group()
 
         Player.containers = (self.updatable, self.drawable)
         Asteroid.containers = (self.updatable, self.drawable, self.asteroids)
@@ -34,6 +36,7 @@ class Game:
         Shot.containers = (self.updatable, self.drawable, self.shots)
         Explosion.containers = (self.updatable, self.drawable, self.explosions)
         PowerUp.containers = (self.updatable, self.drawable, self.powerups)
+        XPOrb.containers = (self.updatable, self.drawable, self.xporbs)
 
         self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         AsteroidField()
@@ -70,6 +73,7 @@ class Game:
             if self._handle_player_on_asteroid_collision(asteroid1):
                 break
         self._handle_player_on_powerup_collision()
+        self._handle_player_on_xporb_collision()
 
     def _handle_asteroid_on_asteroid_collision(
         self, asteroid1, other_asteroids
@@ -99,6 +103,8 @@ class Game:
                 Explosion(asteroid.position.x, asteroid.position.y)
                 if random.random() < POWERUP_CHANCE:
                     PowerUp(asteroid.position.x, asteroid.position.y)
+                if random.random() < XP_ORB_CHANCE:
+                    XPOrb(asteroid.position.x, asteroid.position.y, 25)
 
     def _handle_player_on_asteroid_collision(self, asteroid):
         if self.player.collides(asteroid):
@@ -115,6 +121,12 @@ class Game:
             if self.player.collides(powerup):
                 self.player.set_weapon(powerup.type)
                 powerup.kill()
+
+    def _handle_player_on_xporb_collision(self):
+        for orb in self.xporbs:
+            if self.player.collides(orb):
+                self.player.add_xp(orb.value)
+                orb.kill()
 
     def _draw(self):
         self.background.draw(self.screen, self.player.position)
@@ -136,6 +148,8 @@ class Game:
             self._draw_powerup_bar()
         if self.player.shield_timer > 0:
             self._draw_shield_bar()
+
+        self._draw_xp_bar()
 
         pygame.display.flip()
 
@@ -160,6 +174,21 @@ class Game:
         fill_rect = pygame.Rect(x, y, fill, bar_height)
         pygame.draw.rect(self.screen, pygame.Color("white"), border_rect, 2)
         pygame.draw.rect(self.screen, pygame.Color("white"), fill_rect)
+
+    def _draw_xp_bar(self):
+        bar_width = SCREEN_WIDTH - 20
+        bar_height = 15
+        x = 10
+        y = 10
+        fill = (self.player.xp / self.player.xp_to_next_level) * bar_width
+        border_rect = pygame.Rect(x, y, bar_width, bar_height)
+        fill_rect = pygame.Rect(x, y, fill, bar_height)
+        pygame.draw.rect(self.screen, pygame.Color("white"), border_rect, 2)
+        pygame.draw.rect(self.screen, pygame.Color("magenta"), fill_rect)
+        level_text = self.font.render(
+            f"Level: {self.player.level}", True, pygame.Color("white")
+        )
+        self.screen.blit(level_text, (x + 5, y - 25))
 
 
 def main():
