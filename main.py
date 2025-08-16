@@ -19,7 +19,9 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 36)
+        self.title_font = pygame.font.Font(None, 72)
         self.running = True
+        self.game_state = "MENU"
         self.score = 0
 
         self.updatable = pygame.sprite.Group()
@@ -38,26 +40,125 @@ class Game:
         PowerUp.containers = (self.updatable, self.drawable, self.powerups)
         XPOrb.containers = (self.updatable, self.drawable, self.xporbs)
 
+        self.player = None
+        self.background = Background(SCREEN_WIDTH, SCREEN_HEIGHT, 200)
+
+    def _reset_game(self):
+        self.score = 0
+        for group in [
+            self.updatable,
+            self.drawable,
+            self.asteroids,
+            self.shots,
+            self.explosions,
+            self.powerups,
+            self.xporbs,
+        ]:
+            group.empty()
+
         self.player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         AsteroidField()
-        self.background = Background(SCREEN_WIDTH, SCREEN_HEIGHT, 200)
 
     def run(self):
         dt = 0.0
         while self.running:
-            self._handle_input()
-            self._process_game_logic(dt)
-            self._draw()
+            if self.game_state == "MENU":
+                self.main_menu_update()
+            elif self.game_state == "PLAYING":
+                self.playing_update(dt)
+            elif self.game_state == "GAME_OVER":
+                self.game_over_update()
+
             dt = self.clock.tick(60) / 1000.0
 
-    def _handle_input(self):
+    def main_menu_update(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    self.game_state = "PLAYING"
+                    self._reset_game()
+                if event.key == pygame.K_ESCAPE:
+                    self.running = False
+
+        self.screen.fill(pygame.Color("black"))
+
+        title_text = self.title_font.render(
+            "Asteroids", True, pygame.Color("white")
+        )
+        title_rect = title_text.get_rect(
+            center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3)
+        )
+        self.screen.blit(title_text, title_rect)
+
+        start_text = self.font.render(
+            "Press ENTER to Start", True, pygame.Color("white")
+        )
+        start_rect = start_text.get_rect(
+            center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        )
+        self.screen.blit(start_text, start_rect)
+
+        exit_text = self.font.render(
+            "Press ESC to Exit", True, pygame.Color("white")
+        )
+        exit_rect = exit_text.get_rect(
+            center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50)
+        )
+        self.screen.blit(exit_text, exit_rect)
+
+        pygame.display.flip()
+
+    def playing_update(self, dt):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                shot = self.player.shoot()
-                if shot:
-                    self.shots.add(shot)
+                shots = self.player.shoot()
+                if shots:
+                    self.shots.add(shots)
+
+        self._process_game_logic(dt)
+        self._draw()
+        if self.player.lives <= 0:
+            self.game_state = "GAME_OVER"
+
+    def game_over_update(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    self.game_state = "MENU"
+
+        self.screen.fill(pygame.Color("black"))
+
+        title_text = self.title_font.render(
+            "Game Over", True, pygame.Color("white")
+        )
+        title_rect = title_text.get_rect(
+            center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3)
+        )
+        self.screen.blit(title_text, title_rect)
+
+        score_text = self.font.render(
+            f"Score: {self.score}", True, pygame.Color("white")
+        )
+        score_rect = score_text.get_rect(
+            center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        )
+        self.screen.blit(score_text, score_rect)
+
+        restart_text = self.font.render(
+            "Press ENTER to return to Menu", True, pygame.Color("white")
+        )
+        restart_rect = restart_text.get_rect(
+            center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50)
+        )
+        self.screen.blit(restart_text, restart_rect)
+
+        pygame.display.flip()
 
     def _process_game_logic(self, dt):
         self.updatable.update(dt)
@@ -111,8 +212,6 @@ class Game:
             asteroid.split()
             self.player.hit()
             if self.player.lives <= 0:
-                print("Game over!")
-                self.running = False
                 return True
         return False
 
@@ -199,6 +298,7 @@ class Game:
 def main():
     game = Game()
     game.run()
+
 
 
 if __name__ == "__main__":
