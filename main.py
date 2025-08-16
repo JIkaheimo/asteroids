@@ -134,24 +134,44 @@ class Game:
         for entity in self.drawable:
             entity.draw(self.screen)
 
-        lives_text = self.font.render(
-            f"Lives: {self.player.lives}", True, pygame.Color("white")
-        )
-        self.screen.blit(lives_text, (10, 10))
+        self._draw_hud()
 
+        pygame.display.flip()
+
+    def _draw_hud(self):
+        # Score and Lives
         score_text = self.font.render(
             f"Score: {self.score}", True, pygame.Color("white")
         )
-        self.screen.blit(score_text, (10, 40))
+        self.screen.blit(score_text, (10, 10))
 
+        lives_text = self.font.render(
+            f"Lives: {self.player.lives}", True, pygame.Color("white")
+        )
+        self.screen.blit(lives_text, (10, 40))
+
+        # Level and XP Bar
+        level_text = self.font.render(
+            f"Level: {self.player.level}", True, pygame.Color("white")
+        )
+        level_text_rect = level_text.get_rect(centerx=SCREEN_WIDTH / 2, y=10)
+        self.screen.blit(level_text, level_text_rect)
+
+        bar_width = SCREEN_WIDTH / 2
+        bar_height = 15
+        x = SCREEN_WIDTH / 2 - bar_width / 2
+        y = 40
+        fill = (self.player.xp / self.player.xp_to_next_level) * bar_width
+        border_rect = pygame.Rect(x, y, bar_width, bar_height)
+        fill_rect = pygame.Rect(x, y, fill, bar_height)
+        pygame.draw.rect(self.screen, pygame.Color("white"), border_rect, 2)
+        pygame.draw.rect(self.screen, pygame.Color("magenta"), fill_rect)
+
+        # Power-up and Shield Bars
         if self.player.powerup_timer > 0:
             self._draw_powerup_bar()
         if self.player.shield_timer > 0:
             self._draw_shield_bar()
-
-        self._draw_xp_bar()
-
-        pygame.display.flip()
 
     def _draw_powerup_bar(self):
         bar_width = 200
@@ -174,21 +194,6 @@ class Game:
         fill_rect = pygame.Rect(x, y, fill, bar_height)
         pygame.draw.rect(self.screen, pygame.Color("white"), border_rect, 2)
         pygame.draw.rect(self.screen, pygame.Color("white"), fill_rect)
-
-    def _draw_xp_bar(self):
-        bar_width = SCREEN_WIDTH - 20
-        bar_height = 15
-        x = 10
-        y = 10
-        fill = (self.player.xp / self.player.xp_to_next_level) * bar_width
-        border_rect = pygame.Rect(x, y, bar_width, bar_height)
-        fill_rect = pygame.Rect(x, y, fill, bar_height)
-        pygame.draw.rect(self.screen, pygame.Color("white"), border_rect, 2)
-        pygame.draw.rect(self.screen, pygame.Color("magenta"), fill_rect)
-        level_text = self.font.render(
-            f"Level: {self.player.level}", True, pygame.Color("white")
-        )
-        self.screen.blit(level_text, (x + 5, y - 25))
 
 
 def main():

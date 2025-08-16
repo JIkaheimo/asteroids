@@ -28,9 +28,9 @@ class Player(CircleShape):
         self.powerup_timer = 0.0
         self.shielded = False
         self.shield_timer = 0.0
-        self.level = 1
-        self.xp = 0
-        self.xp_to_next_level = 100
+        self.level: int = 1
+        self.xp: int = 0
+        self.xp_to_next_level: int = 100
 
     def hit(self):
         if self.shielded:
@@ -127,7 +127,7 @@ class Player(CircleShape):
             self.weapon = weapon_type
             self.powerup_timer = POWERUP_DURATION
 
-    def add_xp(self, amount):
+    def add_xp(self, amount: int):
         self.xp += amount
         if self.xp >= self.xp_to_next_level:
             self.level_up()
